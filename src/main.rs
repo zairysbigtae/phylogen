@@ -1,4 +1,4 @@
-use phylogen::{cell::{property::CellProperties, Cell}, nutrients::Nutrients, organelle::{Organelle, OrganelleKind}};
+use phylogen::{cell::{property::CellProperties, Cell}, nutrients::{nutrient_node::NutrientNode, Nutrients}, organelle::{Organelle, OrganelleKind}};
 use raylib::prelude::*;
 
 fn main() {
@@ -29,7 +29,9 @@ fn main() {
         size,
         nutrients: Nutrients::new(),
         velocity: Vector2::new(0.05, 0.0),
+        consumed: false,
     };
+    let mut nutrient_nodes = vec![NutrientNode::new(Vector2::new(120.0, 100.0))];
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -39,8 +41,16 @@ fn main() {
         cell.draw(&mut d);
         cell.update();
 
+        for nutrient_node in &mut nutrient_nodes {
+            cell.eat(nutrient_node);
+            nutrient_node.draw(&mut d);
+        }
+
+        nutrient_nodes.retain(|node| !node.consumed);
+
         println!("Cell's ATP: {}", cell.atp);
         println!("Cell's glucose: {}", cell.nutrients.glucose);
         println!("Cell's oxygen level: {}", cell.o2_level);
+        println!("Cell's position: {:?}", cell.pos);
     }
 }

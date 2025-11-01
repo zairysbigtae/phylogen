@@ -1,6 +1,6 @@
-use raylib::math::Vector2;
+use raylib::{color::Color, math::Vector2, prelude::{RaylibDraw, RaylibDrawHandle}};
 
-use super::Nutrients;
+use super::{HasNutrients, Nutrients};
 
 pub struct NutrientNode {
     pub nutrients: Nutrients,
@@ -8,6 +8,24 @@ pub struct NutrientNode {
     pub pos: Vector2,
     pub size: Vector2,
     pub consumed: bool,
+}
+
+impl HasNutrients for NutrientNode {
+    fn get_pos(&self) -> Vector2 {
+        self.pos
+    }
+
+    fn get_size(&self) -> Vector2 {
+        self.size
+    }
+
+    fn get_nutrients(&self) -> Nutrients {
+        self.nutrients
+    }
+
+    fn consume(&mut self) {
+        self.consumed = true;
+    }
 }
 
 impl NutrientNode {
@@ -22,5 +40,9 @@ impl NutrientNode {
             size: Vector2::new(size, size),
             consumed: false,
         }
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        d.draw_rectangle_v(self.pos, self.size, Color::WHITE);
     }
 }

@@ -3,7 +3,7 @@ pub mod property;
 use property::{CellProperties, BASE_RESPIRATION_RATE};
 use raylib::prelude::*;
 
-use crate::{nutrients::Nutrients, organelle::{Organelle, OrganelleKind}};
+use crate::{nutrients::{HasNutrients, Nutrients}, organelle::{Organelle, OrganelleKind}, utils::rects_collide};
 
 #[derive(Default)]
 pub struct Cell {
@@ -22,6 +22,26 @@ pub struct Cell {
     pub size: Vector2,
     pub velocity: Vector2,
     //pub mass: f32,
+
+    pub consumed: bool,
+}
+
+impl HasNutrients for Cell {
+    fn get_pos(&self) -> Vector2 {
+        self.pos
+    }
+
+    fn get_size(&self) -> Vector2 {
+        self.size
+    }
+
+    fn get_nutrients(&self) -> Nutrients {
+        self.nutrients
+    }
+
+    fn consume(&mut self) {
+        self.consumed = true;
+    }
 }
 
 impl Cell {
@@ -63,6 +83,15 @@ impl Cell {
         self.o2_level = (self.o2_level + intake).min(self.max_o2_level);
     }
 
+    pub fn eat<T: HasNutrients>(&mut self, other: &mut T) {
+        if rects_collide(self.pos.x, self.pos.y, self.size.x, self.size.y, other.get_pos().x, other.get_pos().y, other.get_size().x, other.get_size().y) {
+            self.nutrients += other.get_nutrients();
+            self.atp -= 2.0;
+
+            other.consume();
+        }
+    }
+
     fn generate_atp(&mut self) {
         for organelle in &self.organelles {
             if organelle.organelle == OrganelleKind::Mitochondria {
@@ -94,7 +123,7 @@ impl Cell {
                 self.atp += atp_yield;
 
                 // maintenance cost
-                self.atp -= 0.01 * self.properties.metabolism_rate * self.atp;
+                self.atp -= 0.0001 * self.properties.metabolism_rate * self.atp;
             }
         }
     }

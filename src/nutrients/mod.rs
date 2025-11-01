@@ -1,6 +1,16 @@
 pub mod nutrient_node;
 
+use std::ops::AddAssign;
+
 use rand::random_range;
+use raylib::math::Vector2;
+
+pub trait HasNutrients {
+    fn get_pos(&self) -> Vector2;
+    fn get_size(&self) -> Vector2;
+    fn get_nutrients(&self) -> Nutrients;
+    fn consume(&mut self);
+}
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Nutrients {
@@ -15,12 +25,20 @@ pub struct Nutrients {
 impl Nutrients {
     pub fn new() -> Self {
         Self {
-            glucose: random_range(0.0..3.0),
-            amino_acids: random_range(0.0..2.0),
-            lipids: random_range(0.0..1.0),
-            max_glucose: random_range(5.0..10.0),
-            max_amino_acids: random_range(5.0..6.0),
-            max_lipids: random_range(3.0..5.0),
+            glucose: random_range(0.0..40.0),
+            amino_acids: random_range(10.0..200.0),
+            lipids: random_range(10.0..100.0),
+            max_glucose: random_range(150.0..500.0),
+            max_amino_acids: random_range(5.0..500.0),
+            max_lipids: random_range(150.0..500.0),
         }
+    }
+}
+
+impl AddAssign for Nutrients {
+    fn add_assign(&mut self, rhs: Self) {
+        self.glucose = self.glucose + rhs.glucose;
+        self.amino_acids = self.amino_acids + rhs.amino_acids;
+        self.lipids = self.lipids + rhs.lipids;
     }
 }
