@@ -3,7 +3,7 @@ pub mod property;
 use property::{CellProperties, BASE_RESPIRATION_RATE};
 use raylib::prelude::*;
 
-use crate::organelle::{Organelle, OrganelleKind};
+use crate::{nutrients::Nutrients, organelle::{Organelle, OrganelleKind}};
 
 #[derive(Default)]
 pub struct Cell {
@@ -13,8 +13,7 @@ pub struct Cell {
     pub env_o2_level: f32,
     pub max_o2_level: f32,
 
-    pub glucose: f32,
-    pub max_glucose: f32,
+    pub nutrients: Nutrients,
 
     pub properties: CellProperties,
     pub organelles: Vec<Organelle>,
@@ -67,9 +66,9 @@ impl Cell {
     fn generate_atp(&mut self) {
         for organelle in &self.organelles {
             if organelle.organelle == OrganelleKind::Mitochondria {
-                let burn_rate = 1.0 * (self.glucose / self.max_glucose).clamp(0.0, 1.0);
+                let burn_rate = 10.0 * (self.nutrients.glucose / self.nutrients.max_glucose).clamp(0.0, 1.0);
                 let max_burn = self.properties.metabolism_rate * organelle.efficiency * organelle.activity_level * burn_rate;
-                let glucose_used = self.glucose.min(max_burn);
+                let glucose_used = self.nutrients.glucose.min(max_burn);
 
                 if glucose_used <= 0.0
                 || self.atp >= self.max_atp {
@@ -87,7 +86,7 @@ impl Cell {
 
                 let o2_factor = o2_used / min_o2_level;
                 let glucose_burned = glucose_used * o2_factor.max(0.05);
-                self.glucose -= glucose_burned;
+                self.nutrients.glucose -= glucose_burned;
 
                 // atp yield
                 let anaerobic_yield = 2.0 * glucose_used * (1.0 - o2_factor);
@@ -115,14 +114,14 @@ mod tests {
     #[test]
     fn generate_energy_test() {
         let mut cell = Cell::default();
-        cell.glucose = 10.1;
+        cell.nutrients.glucose = 10.1;
         cell.properties.metabolism_rate = 0.01;
         cell.o2_level = 21.0;
 
         let area = cell.size.x * cell.size.y;
         let size_ratio = area / (area + 1.0);
 
-        cell.max_glucose = area * 0.1 + cell.organelles.len() as f32 * 0.0001;
+        cell.nutrients.max_glucose = area * 0.1 + cell.organelles.len() as f32 * 0.0001;
         cell.properties.respiration_rate = BASE_RESPIRATION_RATE * cell.properties.metabolism_rate * size_ratio;
 
         cell.env_o2_level = 0.0;
@@ -140,7 +139,7 @@ mod tests {
             cell.breathe();
 
             println!("Cell's ATP: {}", cell.atp);
-            println!("Cell's glucose: {}", cell.glucose);
+            println!("Cell's glucose: {}", cell.nutrients.glucose);
             println!("Cell's oxygen level: {}", cell.o2_level);
         }
     }

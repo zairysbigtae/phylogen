@@ -1,4 +1,4 @@
-use phylogen::{cell::{property::CellProperties, Cell}, organelle::{Organelle, OrganelleKind}};
+use phylogen::{cell::{property::CellProperties, Cell}, nutrients::Nutrients, organelle::{Organelle, OrganelleKind}};
 use raylib::prelude::*;
 
 fn main() {
@@ -19,7 +19,6 @@ fn main() {
         o2_level: 21.0,
         max_o2_level: 21.0 + organelles.len() as f32 * 0.001,
         env_o2_level: 21.0,
-        glucose: 100.0,
         properties: CellProperties {
             metabolism_rate: 0.001,
             respiration_rate: 0.01,
@@ -28,7 +27,7 @@ fn main() {
         organelles: organelles.clone(),
         pos: Vector2::new(100.0, 100.0),
         size,
-        max_glucose: area * 0.1 + organelles.len() as f32 * 0.0001,
+        nutrients: Nutrients::new(),
         velocity: Vector2::new(0.05, 0.0),
     };
 
@@ -41,7 +40,7 @@ fn main() {
         cell.update();
 
         println!("Cell's ATP: {}", cell.atp);
-        println!("Cell's glucose: {}", cell.glucose);
+        println!("Cell's glucose: {}", cell.nutrients.glucose);
         println!("Cell's oxygen level: {}", cell.o2_level);
     }
 }
