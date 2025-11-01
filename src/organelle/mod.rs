@@ -1,3 +1,6 @@
+use rand::random_range;
+use raylib::prelude::*;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum OrganelleKind {
     Nucleus,     // control center, holds DNA
@@ -18,6 +21,9 @@ pub struct Organelle {
     pub efficiency: f32, // depends on if the organelle is damaged
     pub activity_level: f32,
     pub integrity: f32, // general health
+
+    pub pos: Vector2,
+    pub size: Vector2,
 }
 
 impl Default for Organelle {
@@ -27,6 +33,9 @@ impl Default for Organelle {
             efficiency: 0.99,
             activity_level: 1.0,
             integrity: 1.0,
+
+            pos: Vector2::new(random_range(0.0..1.0), random_range(0.0..1.0)),
+            size: Vector2::new(1.0, 1.0)
         }
     }
 }
@@ -38,7 +47,9 @@ impl Organelle {
             efficiency: 0.99,
             activity_level: 1.0,
             integrity: 1.0,
+
+            pos: Vector2::new(random_range(0.0..1.0), random_range(0.0..1.0)),
+            size: Vector2::new(1.0, 1.0)
         }
     }
-
 }

@@ -21,36 +21,53 @@ pub struct Cell {
 
     pub pos: Vector2,
     pub size: Vector2,
+    pub velocity: Vector2,
+    //pub mass: f32,
 }
 
 impl Cell {
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
-        let color = if self.atp < 200.0 {
+        let color = if (self.atp / self.max_atp) <= 0.3  {
             Color::RED
         } else {
-            Color::GREENYELLOW
+            Color::GREENYELLOW.alpha(0.2)
         };
 
+        // the uhh body?
         d.draw_rectangle_v(self.pos, self.size, color);
+
+        // organelles hehe
+        for organelle in &self.organelles {
+            d.draw_ellipse(organelle.pos.x as i32, organelle.pos.y as i32, organelle.size.x, organelle.size.y, Color::SALMON);
+        }
     }
 
     pub fn update(&mut self) {
         self.generate_atp();
         self.breathe();
+        self.glide();
 
         self.atp = self.atp.max(0.0);
     }
 
-    pub fn breathe(&mut self) {
+    fn glide(&mut self) {
+        self.pos += self.velocity;
+
+        let base = 0.2; // base maintenance cost
+        let speed = self.velocity.length();
+        self.atp -= base * speed;
+    }
+
+    fn breathe(&mut self) {
         let env_o2_factor = self.env_o2_level / 21.0; // 0 - 1
         let intake = (self.max_o2_level - self.o2_level) * env_o2_factor * self.properties.respiration_rate;
         self.o2_level = (self.o2_level + intake).min(self.max_o2_level);
     }
 
-    pub fn generate_atp(&mut self) {
+    fn generate_atp(&mut self) {
         for organelle in &self.organelles {
             if organelle.organelle == OrganelleKind::Mitochondria {
-                let burn_rate = 0.04 * (self.glucose / self.max_glucose).clamp(0.0, 1.0);
+                let burn_rate = 1.0 * (self.glucose / self.max_glucose).clamp(0.0, 1.0);
                 let max_burn = self.properties.metabolism_rate * organelle.efficiency * organelle.activity_level * burn_rate;
                 let glucose_used = self.glucose.min(max_burn);
 
@@ -88,6 +105,8 @@ impl Cell {
 
 #[cfg(test)]
 mod tests {
+    use raylib::math::Vector2;
+
     use crate::organelle::{Organelle, OrganelleKind};
     use crate::cell::property::BASE_RESPIRATION_RATE;
 
@@ -97,7 +116,7 @@ mod tests {
     fn generate_energy_test() {
         let mut cell = Cell::default();
         cell.glucose = 10.1;
-        cell.properties.metabolism_rate = 0.001;
+        cell.properties.metabolism_rate = 0.01;
         cell.o2_level = 21.0;
 
         let area = cell.size.x * cell.size.y;
@@ -110,7 +129,9 @@ mod tests {
         cell.max_o2_level = 21.0 + cell.organelles.len() as f32 * 0.001;
         cell.max_atp = 2160.0;
 
-        for _ in 0..6000 {
+        cell.velocity = Vector2::new(0.05, 0.0);
+
+        for _ in 0..1 {
             cell.organelles.push(Organelle::new(OrganelleKind::Mitochondria));
         }
 
