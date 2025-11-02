@@ -6,7 +6,7 @@ use raylib::prelude::*;
 use crate::{nutrients::{nutrient_node::NutrientNode, HasNutrients, Nutrients}, organelle::{Organelle, OrganelleKind}, utils::rects_collide};
 
 #[derive(Default)]
-pub struct Cell<'a> {
+pub struct Cell {
     pub atp: f32,
     pub max_atp: f32,
     pub o2_level: f32,
@@ -23,13 +23,13 @@ pub struct Cell<'a> {
     pub velocity: Vector2,
     //pub mass: f32,
 
-    pub nearest_food: Option<&'a dyn HasNutrients>,
+    pub nearest_food: Option<Box<dyn HasNutrients>>,
     pub nearest_food_dist_sq: f32,
 
     pub consumed: bool,
 }
 
-impl<'a> HasNutrients for Cell<'a> {
+impl HasNutrients for Cell {
     fn get_pos(&self) -> Vector2 {
         self.pos
     }
@@ -42,17 +42,17 @@ impl<'a> HasNutrients for Cell<'a> {
         self.nutrients
     }
 
-    fn consume(&mut self) {
+    fn get_consumed(&mut self) {
         self.consumed = true;
     }
 }
 
-impl<'a> Cell<'a> {
+impl Cell {
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         let color = if (self.atp / self.max_atp) <= 0.3  {
             Color::RED
         } else {
-            Color::GREENYELLOW.alpha(0.2)
+            Color::GREENYELLOW
         };
 
         // the uhh body?
@@ -72,17 +72,17 @@ impl<'a> Cell<'a> {
         self.atp = self.atp.max(0.0);
     }
 
-    pub fn find_food<T: HasNutrients>(&mut self, food: &'a T) {
+    pub fn find_food<T: HasNutrients + Clone + 'static>(&mut self, food: T) {
         let dx = food.get_pos().x - self.pos.x;
         let dy = food.get_pos().y - self.pos.y;
         let food_dist_sq = dx*dx + dy*dy;
 
         if food_dist_sq < self.nearest_food_dist_sq {
             self.nearest_food_dist_sq = food_dist_sq;
-            self.nearest_food = Some(food);
+            self.nearest_food = Some(Box::new(food));
         }
 
-        if let Some(food) = self.nearest_food {
+        if let Some(food) = &self.nearest_food {
             let dx = food.get_pos().x - self.pos.x;
             let dy = food.get_pos().y - self.pos.y;
             let food_dist = (dx*dx + dy*dy).sqrt();
@@ -93,17 +93,18 @@ impl<'a> Cell<'a> {
 
                 let speed = self.velocity.length();
                 let stop_dist = 20.0;
-                let move_speed = if food_dist < stop_dist {
-                    speed * (food_dist / stop_dist)
-                } else {
-                    speed
-                };
+                // let move_speed = if food_dist < stop_dist {
+                //     speed * (speed + (food_dist / stop_dist))
+                // } else {
+                //     speed
+                // };
+                let move_speed = speed;
 
                 self.velocity.x = dir_x * move_speed;
                 self.velocity.y = dir_y * move_speed;
             }
 
-            println!("food");
+            // println!("food");
         }
     }
 
@@ -126,7 +127,10 @@ impl<'a> Cell<'a> {
             self.nutrients += other.get_nutrients();
             self.atp -= 2.0;
 
-            other.consume();
+            self.nearest_food_dist_sq = f32::MAX;
+            self.nearest_food = None;
+
+            other.get_consumed();
         }
     }
 

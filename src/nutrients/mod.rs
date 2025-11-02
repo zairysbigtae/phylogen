@@ -9,7 +9,7 @@ pub trait HasNutrients {
     fn get_pos(&self) -> Vector2;
     fn get_size(&self) -> Vector2;
     fn get_nutrients(&self) -> Nutrients;
-    fn consume(&mut self);
+    fn get_consumed(&mut self);
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -25,7 +25,7 @@ pub struct Nutrients {
 impl Nutrients {
     pub fn new() -> Self {
         Self {
-            glucose: random_range(0.0..40.0),
+            glucose: random_range(0.0..10.0),
             amino_acids: random_range(10.0..200.0),
             lipids: random_range(10.0..100.0),
             max_glucose: random_range(150.0..500.0),

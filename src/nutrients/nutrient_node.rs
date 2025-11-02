@@ -24,7 +24,7 @@ impl HasNutrients for NutrientNode {
         self.nutrients
     }
 
-    fn consume(&mut self) {
+    fn get_consumed(&mut self) {
         self.consumed = true;
     }
 }
@@ -38,7 +38,7 @@ impl NutrientNode {
             nutrients,
 
             pos,
-            size: Vector2::new(size, size),
+            size: Vector2::new(size, size) * 3.0,
             consumed: false,
         }
     }
