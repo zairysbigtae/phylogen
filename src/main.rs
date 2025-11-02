@@ -1,4 +1,5 @@
 use phylogen::{cell::{property::CellProperties, Cell}, nutrients::{nutrient_node::NutrientNode, Nutrients}, organelle::{Organelle, OrganelleKind}};
+use rand::random_range;
 use raylib::prelude::*;
 
 fn main() {
@@ -30,8 +31,15 @@ fn main() {
         nutrients: Nutrients::new(),
         velocity: Vector2::new(0.05, 0.0),
         consumed: false,
+        nearest_food: None,
+        nearest_food_dist_sq: f32::MAX,
     };
-    let mut nutrient_nodes = vec![NutrientNode::new(Vector2::new(120.0, 100.0))];
+    let mut nutrient_nodes = vec![];
+
+    for _ in 0..100 {
+        let nutrient_node= NutrientNode::new(Vector2::new(random_range(0.0..500.0), random_range(0.0..500.0)));
+        nutrient_nodes.push(nutrient_node);
+    }
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -42,7 +50,10 @@ fn main() {
         cell.update();
 
         for nutrient_node in &mut nutrient_nodes {
-            cell.eat(nutrient_node);
+            let temp_nutrient_node = nutrient_node.clone();
+
+            cell.find_food(&temp_nutrient_node);
+            // cell.eat(nutrient_node);
             nutrient_node.draw(&mut d);
         }
 

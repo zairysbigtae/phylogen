@@ -2,6 +2,7 @@ use raylib::{color::Color, math::Vector2, prelude::{RaylibDraw, RaylibDrawHandle
 
 use super::{HasNutrients, Nutrients};
 
+#[derive(Debug, Clone, Copy)]
 pub struct NutrientNode {
     pub nutrients: Nutrients,
 

@@ -3,10 +3,10 @@ pub mod property;
 use property::{CellProperties, BASE_RESPIRATION_RATE};
 use raylib::prelude::*;
 
-use crate::{nutrients::{HasNutrients, Nutrients}, organelle::{Organelle, OrganelleKind}, utils::rects_collide};
+use crate::{nutrients::{nutrient_node::NutrientNode, HasNutrients, Nutrients}, organelle::{Organelle, OrganelleKind}, utils::rects_collide};
 
 #[derive(Default)]
-pub struct Cell {
+pub struct Cell<'a> {
     pub atp: f32,
     pub max_atp: f32,
     pub o2_level: f32,
@@ -23,10 +23,13 @@ pub struct Cell {
     pub velocity: Vector2,
     //pub mass: f32,
 
+    pub nearest_food: Option<&'a dyn HasNutrients>,
+    pub nearest_food_dist_sq: f32,
+
     pub consumed: bool,
 }
 
-impl HasNutrients for Cell {
+impl<'a> HasNutrients for Cell<'a> {
     fn get_pos(&self) -> Vector2 {
         self.pos
     }
@@ -44,7 +47,7 @@ impl HasNutrients for Cell {
     }
 }
 
-impl Cell {
+impl<'a> Cell<'a> {
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         let color = if (self.atp / self.max_atp) <= 0.3  {
             Color::RED
@@ -67,6 +70,41 @@ impl Cell {
         self.glide();
 
         self.atp = self.atp.max(0.0);
+    }
+
+    pub fn find_food<T: HasNutrients>(&mut self, food: &'a T) {
+        let dx = food.get_pos().x - self.pos.x;
+        let dy = food.get_pos().y - self.pos.y;
+        let food_dist_sq = dx*dx + dy*dy;
+
+        if food_dist_sq < self.nearest_food_dist_sq {
+            self.nearest_food_dist_sq = food_dist_sq;
+            self.nearest_food = Some(food);
+        }
+
+        if let Some(food) = self.nearest_food {
+            let dx = food.get_pos().x - self.pos.x;
+            let dy = food.get_pos().y - self.pos.y;
+            let food_dist = (dx*dx + dy*dy).sqrt();
+
+            if food_dist > 0.0 {
+                let dir_x = dx / food_dist;
+                let dir_y = dy / food_dist;
+
+                let speed = self.velocity.length();
+                let stop_dist = 20.0;
+                let move_speed = if food_dist < stop_dist {
+                    speed * (food_dist / stop_dist)
+                } else {
+                    speed
+                };
+
+                self.velocity.x = dir_x * move_speed;
+                self.velocity.y = dir_y * move_speed;
+            }
+
+            println!("food");
+        }
     }
 
     fn glide(&mut self) {
