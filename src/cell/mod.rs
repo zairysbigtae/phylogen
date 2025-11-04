@@ -87,7 +87,7 @@ impl Cell {
             let dy = food.get_pos().y - self.pos.y;
             let food_dist = (dx*dx + dy*dy).sqrt();
 
-            if food_dist > 0.0 {
+            // if food_dist != 0.0 {
                 let dir_x = dx / food_dist;
                 let dir_y = dy / food_dist;
 
@@ -102,7 +102,7 @@ impl Cell {
 
                 self.velocity.x = dir_x * move_speed;
                 self.velocity.y = dir_y * move_speed;
-            }
+            // }
 
             // println!("food");
         }
@@ -112,7 +112,7 @@ impl Cell {
         self.pos += self.velocity;
 
         let base = 0.2; // base maintenance cost
-        let speed = self.velocity.length();
+        let speed = self.velocity.length() * 2.0;
         self.atp -= base * speed;
     }
 
@@ -127,10 +127,12 @@ impl Cell {
             self.nutrients += other.get_nutrients();
             self.atp -= 2.0;
 
+            other.get_consumed();
+
+            println!("consumed");
+
             self.nearest_food_dist_sq = f32::MAX;
             self.nearest_food = None;
-
-            other.get_consumed();
         }
     }
 

@@ -8,6 +8,8 @@ fn main() {
         .title("Phylogen")
         .build();
 
+    // rl.set_target_fps(60);
+
     let mut organelles = vec![];
     for _ in 0..200 {
         organelles.push(Organelle::new(OrganelleKind::Mitochondria));
@@ -17,7 +19,7 @@ fn main() {
     let area = size.x * size.y;
 
     let mut cells = vec![];
-    for _ in 0..10 {
+    for _ in 0..1 {
         let cell = Cell {
             atp: 1000.0,
             max_atp: 2160.0,
@@ -30,7 +32,7 @@ fn main() {
                 ..Default::default()
             },
             organelles: organelles.clone(),
-            pos: Vector2::new(random_range(0.0..600.0), random_range(0.0..600.0)),
+            pos: Vector2::new(random_range(0.0..300.0), random_range(0.0..300.0)),
             size,
             nutrients: Nutrients::new(),
             velocity: Vector2::new(0.05, 0.0),
@@ -43,8 +45,8 @@ fn main() {
     }
 
     let mut nutrient_nodes = vec![];
-    for _ in 0..10 {
-        let nutrient_node= NutrientNode::new(Vector2::new(random_range(0.0..500.0), random_range(0.0..500.0)));
+    for _ in 0..200 {
+        let nutrient_node= NutrientNode::new(Vector2::new(random_range(0.0..300.0), random_range(0.0..300.0)));
         nutrient_nodes.push(nutrient_node);
     }
 
@@ -56,19 +58,21 @@ fn main() {
 
         for cell in &mut cells {
             cell.update();
-            for node in &mut nutrient_nodes {
-                cell.eat(node);
-            }
-
             for node in nutrient_nodes.iter().cloned() {
                 cell.find_food(node);
                 node.draw(&mut d);
             }
+
+            for node in &mut nutrient_nodes {
+                cell.eat(node);
+            }
         }
+
+        nutrient_nodes.retain(|node| !node.consumed);
 
         for cell in &cells {
             cell.draw(&mut d);
-        }
+        // }
         //
         //     d.draw_text(
         //         &format!("Cell's ATP: {}", cell.atp),
@@ -88,17 +92,15 @@ fn main() {
         //         10,
         //         Color::WHITE,
         //     );
-        //     d.draw_text(
-        //         &format!("Cell's pos: {:?}", cell.pos),
-        //         20, 80,
-        //         10,
-        //         Color::WHITE,
-        //     );
-        // }
+            d.draw_text(
+                &format!("Cell's pos: {:?}", cell.pos),
+                20, 80,
+                10,
+                Color::WHITE,
+            );
+        }
 
         d.draw_text(&fps.to_string(), 600, 20, 16, Color::GREEN);
-
-        nutrient_nodes.retain(|node| !node.consumed);
 
         // println!("Cell's ATP: {}", cell.atp);
         // println!("Cell's glucose: {}", cell.nutrients.glucose);
