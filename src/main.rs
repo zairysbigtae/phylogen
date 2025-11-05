@@ -1,4 +1,4 @@
-use phylogen::{cell::{property::CellProperties, Cell}, nutrients::{nutrient_node::NutrientNode, Nutrients}, organelle::{Organelle, OrganelleKind}};
+use phylogen::{cell::{environment::Environment, property::CellProperties, Cell}, nutrients::{nutrient_node::NutrientNode, Nutrients}, organelle::{Organelle, OrganelleKind}};
 use rand::random_range;
 use raylib::prelude::*;
 use cs_utils::drain_filter;
@@ -26,7 +26,6 @@ fn main() {
             max_atp: 2160.0,
             o2_level: 21.0,
             max_o2_level: 21.0 + organelles.len() as f32 * 0.001,
-            env_o2_level: 21.0,
             properties: CellProperties {
                 metabolism_rate: 0.001,
                 respiration_rate: 0.01,
@@ -41,8 +40,11 @@ fn main() {
             nearest_food: None,
             nearest_food_dist_sq: f32::MAX,
             max_photosynthesis_rate: 0.5,
-            light_intensity: 150.0,
-            co2_concentration_level: 400.0,
+            env: Environment {
+                env_o2_level: 21.0,
+                light_intensity: 150.0,
+                co2_concentration_level: 400.0,
+            },
         };
 
         cells.push(cell);

@@ -1,5 +1,7 @@
 pub mod property;
+pub mod environment;
 
+use environment::Environment;
 use property::{CellProperties, BASE_RESPIRATION_RATE};
 use raylib::prelude::*;
 
@@ -11,11 +13,10 @@ pub struct Cell {
     pub max_atp: f32,
 
     pub o2_level: f32,
-    pub env_o2_level: f32,
     pub max_o2_level: f32,
     pub max_photosynthesis_rate: f32,
-    pub light_intensity: f32,
-    pub co2_concentration_level: f32,
+
+    pub env: Environment,
 
     pub nutrients: Nutrients,
 
@@ -121,7 +122,7 @@ impl Cell {
     }
 
     fn breathe(&mut self) {
-        let env_o2_factor = self.env_o2_level / 21.0; // 0 - 1
+        let env_o2_factor = self.env.env_o2_level / 21.0; // 0 - 1
         let intake = (self.max_o2_level - self.o2_level) * env_o2_factor * self.properties.respiration_rate;
         self.o2_level = (self.o2_level + intake).min(self.max_o2_level);
     }
@@ -152,7 +153,7 @@ impl Cell {
                     continue; // nothing to burn
                 }
 
-                let env_o2_factor = self.env_o2_level / 21.0; // range 0-1
+                let env_o2_factor = self.env.env_o2_level / 21.0; // range 0-1
 
                 let min_o2_level = glucose_used * 6.0;
                 let o2_used = self.o2_level.min(min_o2_level * env_o2_factor); // ~6 O2 per glucose
@@ -186,8 +187,8 @@ impl Cell {
                 // rate, counted in units
                 let rate = 
                     p_max *
-                    (self.light_intensity / (self.light_intensity + half_sat_light)) *
-                    (self.co2_concentration_level / (self.co2_concentration_level + half_sat_co2));
+                    (self.env.light_intensity / (self.env.light_intensity + half_sat_light)) *
+                    (self.env.co2_concentration_level / (self.env.co2_concentration_level + half_sat_co2));
 
                 self.nutrients.glucose += rate / 60.0;
             }
