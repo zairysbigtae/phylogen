@@ -8,14 +8,15 @@ fn main() {
         .title("Phylogen")
         .build();
 
-    // rl.set_target_fps(60);
+    rl.set_target_fps(60);
 
     let mut organelles = vec![];
-    for _ in 0..200 {
+    for _ in 0..1 {
         organelles.push(Organelle::new(OrganelleKind::Mitochondria));
+        organelles.push(Organelle::new(OrganelleKind::Chloroplast));
     }
 
-    let size = Vector2::new(10.0, 10.0);
+    let size = Vector2::new(5.0, 5.0);
     let area = size.x * size.y;
 
     let mut cells = vec![];
@@ -39,13 +40,16 @@ fn main() {
             consumed: false,
             nearest_food: None,
             nearest_food_dist_sq: f32::MAX,
+            max_photosynthesis_rate: 0.5,
+            light_intensity: 150.0,
+            co2_concentration_level: 400.0,
         };
 
         cells.push(cell);
     }
 
     let mut nutrient_nodes = vec![];
-    for _ in 0..200 {
+    for _ in 0..1 {
         let nutrient_node= NutrientNode::new(Vector2::new(random_range(0.0..300.0), random_range(0.0..300.0)));
         nutrient_nodes.push(nutrient_node);
     }
@@ -60,6 +64,7 @@ fn main() {
             cell.update();
             for node in nutrient_nodes.iter().cloned() {
                 cell.find_food(node);
+                cell.extract_glucose_from_light();
                 node.draw(&mut d);
             }
 
@@ -73,25 +78,25 @@ fn main() {
         for cell in &cells {
             cell.draw(&mut d);
         // }
-        //
-        //     d.draw_text(
-        //         &format!("Cell's ATP: {}", cell.atp),
-        //         20, 20,
-        //         10,
-        //         Color::WHITE,
-        //     );
-        //     d.draw_text(
-        //         &format!("Cell's glucose: {}", cell.nutrients.glucose),
-        //         20, 40,
-        //         10,
-        //         Color::WHITE,
-        //     );
-        //     d.draw_text(
-        //         &format!("Cell's O2 level: {}", cell.o2_level),
-        //         20, 60,
-        //         10,
-        //         Color::WHITE,
-        //     );
+
+            d.draw_text(
+                &format!("Cell's ATP: {}", cell.atp),
+                20, 20,
+                10,
+                Color::WHITE,
+            );
+            d.draw_text(
+                &format!("Cell's glucose: {}", cell.nutrients.glucose),
+                20, 40,
+                10,
+                Color::WHITE,
+            );
+            d.draw_text(
+                &format!("Cell's O2 level: {}", cell.o2_level),
+                20, 60,
+                10,
+                Color::WHITE,
+            );
             d.draw_text(
                 &format!("Cell's pos: {:?}", cell.pos),
                 20, 80,

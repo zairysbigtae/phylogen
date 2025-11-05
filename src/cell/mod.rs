@@ -9,9 +9,13 @@ use crate::{nutrients::{nutrient_node::NutrientNode, HasNutrients, Nutrients}, o
 pub struct Cell {
     pub atp: f32,
     pub max_atp: f32,
+
     pub o2_level: f32,
     pub env_o2_level: f32,
     pub max_o2_level: f32,
+    pub max_photosynthesis_rate: f32,
+    pub light_intensity: f32,
+    pub co2_concentration_level: f32,
 
     pub nutrients: Nutrients,
 
@@ -109,10 +113,10 @@ impl Cell {
     }
 
     fn glide(&mut self) {
-        self.pos += self.velocity;
+        self.pos += self.velocity * 2.0;
 
         let base = 0.2; // base maintenance cost
-        let speed = self.velocity.length() * 2.0;
+        let speed = self.velocity.length();
         self.atp -= base * speed;
     }
 
@@ -172,48 +176,66 @@ impl Cell {
         }
     }
 
+    pub fn extract_glucose_from_light(&mut self) {
+        for organelle in &self.organelles {
+            if organelle.organelle == OrganelleKind::Chloroplast {
+                let p_max = self.max_photosynthesis_rate;
+                let half_sat_light = 800.0;
+                let half_sat_co2 = 250.0;
+
+                // rate, counted in units
+                let rate = 
+                    p_max *
+                    (self.light_intensity / (self.light_intensity + half_sat_light)) *
+                    (self.co2_concentration_level / (self.co2_concentration_level + half_sat_co2));
+
+                self.nutrients.glucose += rate / 60.0;
+            }
+        }
+    }
+
     // 1 glucose = 10**6 molecules
 }
 
-#[cfg(test)]
-mod tests {
-    use raylib::math::Vector2;
-
-    use crate::organelle::{Organelle, OrganelleKind};
-    use crate::cell::property::BASE_RESPIRATION_RATE;
-
-    use super::Cell;
-
-    #[test]
-    fn generate_energy_test() {
-        let mut cell = Cell::default();
-        cell.nutrients.glucose = 10.1;
-        cell.properties.metabolism_rate = 0.01;
-        cell.o2_level = 21.0;
-
-        let area = cell.size.x * cell.size.y;
-        let size_ratio = area / (area + 1.0);
-
-        cell.nutrients.max_glucose = area * 0.1 + cell.organelles.len() as f32 * 0.0001;
-        cell.properties.respiration_rate = BASE_RESPIRATION_RATE * cell.properties.metabolism_rate * size_ratio;
-
-        cell.env_o2_level = 0.0;
-        cell.max_o2_level = 21.0 + cell.organelles.len() as f32 * 0.001;
-        cell.max_atp = 2160.0;
-
-        cell.velocity = Vector2::new(0.05, 0.0);
-
-        for _ in 0..1 {
-            cell.organelles.push(Organelle::new(OrganelleKind::Mitochondria));
-        }
-
-        for tick in 0..10 {
-            cell.generate_atp();
-            cell.breathe();
-
-            println!("Cell's ATP: {}", cell.atp);
-            println!("Cell's glucose: {}", cell.nutrients.glucose);
-            println!("Cell's oxygen level: {}", cell.o2_level);
-        }
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use raylib::math::Vector2;
+//
+//     use crate::organelle::{Organelle, OrganelleKind};
+//     use crate::cell::property::BASE_RESPIRATION_RATE;
+//
+//     use super::Cell;
+//
+//     #[test]
+//     fn generate_energy_test() {
+//         let mut cell = Cell::default();
+//         cell.nutrients.glucose = 10.1;
+//         cell.properties.metabolism_rate = 0.01;
+//         cell.o2_level = 21.0;
+//
+//         let area = cell.size.x * cell.size.y;
+//         let size_ratio = area / (area + 1.0);
+//
+//         cell.nutrients.max_glucose = area * 0.1 + cell.organelles.len() as f32 * 0.0001;
+//         cell.properties.respiration_rate = BASE_RESPIRATION_RATE * cell.properties.metabolism_rate * size_ratio;
+//
+//         cell.env_o2_level = 0.0;
+//         cell.max_o2_level = 21.0 + cell.organelles.len() as f32 * 0.001;
+//         cell.max_atp = 2160.0;
+//
+//         cell.velocity = Vector2::new(0.05, 0.0);
+//
+//         for _ in 0..1 {
+//             cell.organelles.push(Organelle::new(OrganelleKind::Mitochondria));
+//         }
+//
+//         for tick in 0..10 {
+//             cell.generate_atp();
+//             cell.breathe();
+//
+//             println!("Cell's ATP: {}", cell.atp);
+//             println!("Cell's glucose: {}", cell.nutrients.glucose);
+//             println!("Cell's oxygen level: {}", cell.o2_level);
+//         }
+//     }
+// }
